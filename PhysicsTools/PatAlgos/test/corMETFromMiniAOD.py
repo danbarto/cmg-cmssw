@@ -27,9 +27,9 @@ process.maxEvents = cms.untracked.PSet(
 
 #configurable options =======================================================================
 runOnData=False #data/MC switch
-usePrivateSQlite=False #use external JECs (sqlite file)
+usePrivateSQlite=True #use external JECs (sqlite file)
 useHFCandidates=True #create an additionnal NoHF slimmed MET collection if the option is set to false
-redoPuppi=False # rebuild puppiMET
+redoPuppi=True # rebuild puppiMET
 #===================================================================
 
 
@@ -49,12 +49,15 @@ if usePrivateSQlite:
     from CondCore.DBCommon.CondDBSetup_cfi import *
     import os
     if runOnData:
-      era="Summer15_25nsV6_DATA"
+      era="Spring16_25nsV3_DATA"
     else:
-      era="Summer15_25nsV6_MC"
-      
+      era="Spring16_25nsV3_MC"
+    jerera="Fall15_25nsV2"
+
+##___________________________External JEC file________________________________||
+
     process.jec = cms.ESSource("PoolDBESSource",CondDBSetup,
-                               connect = cms.string( "frontier://FrontierPrep/CMS_COND_PHYSICSTOOLS"),
+                               connect = cms.string("sqlite:PhysicsTools/PatUtils/data/"+era+".db"),
                                toGet =  cms.VPSet(
             cms.PSet(
                 record = cms.string("JetCorrectionsRecord"),
@@ -70,6 +73,29 @@ if usePrivateSQlite:
                                )
     process.es_prefer_jec = cms.ESPrefer("PoolDBESSource",'jec')
 
+##___________________________External JER file________________________________||
+
+    process.jer = cms.ESSource("PoolDBESSource",CondDBSetup,
+                               connect = cms.string("sqlite:PhysicsTools/PatUtils/data/JER/"+jerera+"_MC.db"),
+                               toGet =  cms.VPSet(
+        cms.PSet(
+          record = cms.string('JetResolutionRcd'),
+          tag    = cms.string('JR_'+jerera+'_MC_PtResolution_AK4PFchs'),
+          label  = cms.untracked.string('AK4PFchs_pt')
+          ),
+        cms.PSet(
+          record = cms.string("JetResolutionRcd"),
+          tag    = cms.string('JR_'+jerera+'_MC_PhiResolution_AK4PFchs'),
+          label  = cms.untracked.string("AK4PFchs_phi")
+          ),
+        cms.PSet(
+          record = cms.string('JetResolutionScaleFactorRcd'),
+          tag    = cms.string('JR_'+jerera+'_MC_SF_AK4PFchs'),
+          label  = cms.untracked.string('AK4PFchs')
+          ),
+        ) )
+
+    process.es_prefer_jer = cms.ESPrefer("PoolDBESSource",'jer')
 
 
 ### =====================================================================================================
